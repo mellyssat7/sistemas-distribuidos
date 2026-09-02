@@ -13,7 +13,7 @@ export class UsuariosService {
     },
   ];
 
-  async buscarPorEmail(email: string) {
+  buscarPorEmail(email: string) {
     return this.usuarios.find((usuario) => usuario.email === email);
   }
 }
