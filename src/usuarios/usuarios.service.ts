@@ -1,14 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+
+export type Papel = 'solicitante' | 'gestor' | 'auditor';
+
+export type Usuario = {
+  id: number;
+  nome: string;
+  email: string;
+  senhaHash: string;
+  papel: Papel;
+  ativo: boolean;
+};
+
+export type UsuarioAutenticado = Omit<Usuario, 'senhaHash'>;
 
 @Injectable()
 export class UsuariosService {
-  private readonly usuarios = [
+  private readonly usuarios: Usuario[] = [
     {
       id: 1,
       nome: 'Ana Lima',
       email: 'ana@empresa.com',
-      senhaHash: bcrypt.hashSync('123456', 10),
+      senhaHash:
+        '$2b$12$5S9LDbR3FznMAsZY5P..2OKE932dOHeVvGrmlfklgquClbkKgUidC',
       papel: 'gestor',
       ativo: true,
     },
@@ -16,23 +29,14 @@ export class UsuariosService {
       id: 2,
       nome: 'Bruno Silva',
       email: 'bruno@empresa.com',
-      senhaHash: bcrypt.hashSync('123456', 10),
+      senhaHash:
+        '$2b$12$5S9LDbR3FznMAsZY5P..2OKE932dOHeVvGrmlfklgquClbkKgUidC',
       papel: 'solicitante',
-      ativo: true,
-    },
-    {
-      id: 3,
-      nome: 'Carla Souza',
-      email: 'carla@empresa.com',
-      senhaHash: bcrypt.hashSync('123456', 10),
-      papel: 'auditor',
       ativo: true,
     },
   ];
 
   buscarPorEmail(email: string) {
-    return this.usuarios.find(
-      (usuario) => usuario.email === email,
-    );
+    return this.usuarios.find((usuario) => usuario.email === email);
   }
 }
