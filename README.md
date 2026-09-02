@@ -1,225 +1,202 @@
 # Atividade 01 — Autenticação e Autorização com NestJS
 
-## Identificação
-
-**Disciplina:** Desenvolvimento de Sistemas Corporativos  
-**Curso:** Tecnologia em Sistemas para Internet  
-**Atividade:** Encontros 03 e 04  
-**Projeto:** `api-atividade-01`
-
----
+**Disciplina:** Desenvolvimento de Sistemas Corporativos
+**Curso:** Tecnologia em Sistemas para Internet
+**Encontros:** 03 e 04
 
 ## Objetivo
 
-Desenvolver uma API REST com NestJS para praticar os conceitos de **autenticação e autorização**, utilizando Passport, JWT, bcrypt e Guards.
-
-A aplicação permite autenticar usuários, gerar tokens JWT e controlar o acesso às operações de acordo com o papel de cada usuário.
-
----
+Desenvolver uma API REST com NestJS para praticar **autenticação e autorização**, utilizando autenticação local, bcrypt, JWT e controle de acesso por papéis.
 
 ## Tecnologias
 
-- NestJS
-- TypeScript
-- Passport
-- passport-local
-- passport-jwt
-- JWT
-- bcrypt
-- Docker
-- Docker Compose
-- Git
-- Thunder Client
+* NestJS
+* TypeScript
+* Passport
+* JWT
+* bcrypt
+* Docker e Docker Compose
+* Git
+* Thunder Client
 
----
-
-## Estrutura do projeto
+## Estrutura
 
 ```text
 src/
 ├── auth/
 │   ├── decorators/
-│   │   └── roles.decorator.ts
 │   ├── guards/
-│   │   ├── jwt-auth.guard.ts
-│   │   ├── local-auth.guard.ts
-│   │   └── roles.guard.ts
 │   └── strategies/
-│       ├── jwt.strategy.ts
-│       └── local.strategy.ts
-│
 ├── solicitacoes/
-│   ├── solicitacoes.controller.ts
-│   ├── solicitacoes.module.ts
-│   └── solicitacoes.service.ts
-│
 ├── usuarios/
-│   ├── usuarios.module.ts
-│   └── usuarios.service.ts
-│
 ├── app.module.ts
 └── main.ts
-Autenticação
+```
 
-O login é realizado através da rota:
+## Usuários
 
+Os usuários são mantidos em memória para fins didáticos.
+
+| Usuário     | E-mail                                        | Papel       |
+| ----------- | --------------------------------------------- | ----------- |
+| Ana Lima    | [ana@empresa.com](mailto:ana@empresa.com)     | gestor      |
+| Bruno Silva | [bruno@empresa.com](mailto:bruno@empresa.com) | solicitante |
+| Carla Costa | [carla@empresa.com](mailto:carla@empresa.com) | auditor     |
+
+**Senha dos testes:** `123456`
+
+## Autenticação
+
+O login é realizado pela rota:
+
+```http
 POST /auth/login
+```
 
-Exemplo de requisição:
+Exemplo:
 
+```json
 {
   "email": "ana@empresa.com",
   "senha": "123456"
 }
+```
 
-Após a validação das credenciais, a API gera um accessToken utilizando JWT.
+Após a validação das credenciais, a API retorna um **token JWT**.
 
-As senhas dos usuários são armazenadas como hash utilizando bcrypt, não sendo mantidas em texto puro.
+As senhas são armazenadas utilizando **hash com bcrypt**.
 
-Usuários
+## Rotas
 
-Os usuários utilizados na atividade são mantidos em memória para fins didáticos.
+### Login
 
-Usuário	E-mail	Papel
-Ana Lima	ana@empresa.com	gestor
-Bruno Silva	bruno@empresa.com	solicitante
-Carla Costa	carla@empresa.com	auditor
-
-A senha utilizada nos testes é 123456.
-
-JWT
-
-Após o login, o usuário recebe um token JWT.
-
-O token contém informações necessárias para identificar o usuário, como:
-
-sub — identificador do usuário;
-email — e-mail;
-papel — papel do usuário.
-
-A senha e o hash da senha não são incluídos no token.
-
-O segredo e o tempo de expiração do JWT são configurados por variáveis de ambiente.
-
-Rotas
-Login
+```http
 POST /auth/login
+```
 
-Realiza a autenticação do usuário e retorna um accessToken.
+Realiza a autenticação e gera o token JWT.
 
-Perfil
+### Perfil
+
+```http
 GET /auth/perfil
+```
 
 Requer um token JWT válido.
 
-Retorna os dados básicos do usuário autenticado.
+### Consultar solicitação
 
-Consultar solicitação
+```http
 GET /solicitacoes/1
+```
 
-A rota exige autenticação e permite os papéis:
+Acesso permitido para:
 
-gestor
-auditor
-Aprovar solicitação
+* `gestor`
+* `auditor`
+
+### Aprovar solicitação
+
+```http
 PATCH /solicitacoes/1/aprovar
+```
 
-A rota exige autenticação e permite somente o papel:
+Acesso permitido somente para:
 
-gestor
+* `gestor`
 
-A solicitação utilizada na atividade é:
+Solicitação utilizada nos testes:
 
+```json
 {
   "id": 1,
   "titulo": "Aquisição de notebook",
   "status": "pendente"
 }
+```
 
 Após a aprovação:
 
+```json
 {
   "id": 1,
   "titulo": "Aquisição de notebook",
   "status": "aprovada"
 }
-Autorização por papéis
+```
 
-A aplicação utiliza dois Guards em conjunto:
+## Autorização
 
-JwtAuthGuard — verifica se o usuário está autenticado;
-RolesGuard — verifica se o usuário possui o papel necessário.
+O controle de acesso utiliza dois Guards:
+
+* `JwtAuthGuard` — verifica se o usuário está autenticado;
+* `RolesGuard` — verifica se o usuário possui o papel necessário.
 
 Exemplo:
 
+```typescript
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('gestor', 'auditor')
+```
 
-A autenticação é verificada primeiro. Depois, o papel do usuário é analisado para determinar se ele possui permissão para acessar a rota.
+## Testes realizados
 
-Resultados dos testes
+| Situação                   | Resultado          |
+| -------------------------- | ------------------ |
+| Login válido               | `201 Created`      |
+| Login inválido             | `401 Unauthorized` |
+| Perfil sem token           | `401 Unauthorized` |
+| Ana consulta solicitação   | `200 OK`           |
+| Bruno consulta solicitação | `403 Forbidden`    |
+| Carla consulta solicitação | `200 OK`           |
+| Ana aprova solicitação     | `200 OK`           |
+| Bruno tenta aprovar        | `403 Forbidden`    |
+| Carla tenta aprovar        | `403 Forbidden`    |
 
-Os testes foram realizados utilizando o Thunder Client.
+**401 Unauthorized:** usuário não autenticado ou credenciais inválidas.
 
-Teste	Resultado
-Login válido	201 Created
-Login inválido	401 Unauthorized
-Perfil sem token	401 Unauthorized
-Ana consulta solicitação	200 OK
-Bruno consulta solicitação	403 Forbidden
-Carla consulta solicitação	200 OK
-Ana aprova solicitação	200 OK
-Bruno tenta aprovar	403 Forbidden
-Carla tenta aprovar	403 Forbidden
-401 Unauthorized
+**403 Forbidden:** usuário autenticado, mas sem permissão para realizar a operação.
 
-Ocorre quando a identidade do usuário não foi comprovada.
+## Como executar
 
-Exemplos:
+Com Docker:
 
-ausência de token;
-token inválido;
-token expirado;
-credenciais inválidas.
-403 Forbidden
-
-Ocorre quando o usuário está autenticado, mas não possui permissão para realizar determinada operação.
-
-Exemplo:
-
-Bruno → solicitante
-Rota → exige gestor
-Resultado → 403 Forbidden
-Docker
-
-A aplicação pode ser executada utilizando Docker Compose.
-
-Para construir e iniciar:
-
+```bash
 docker compose up --build
+```
 
 A API ficará disponível em:
 
+```text
 http://localhost:3000
+```
 
-Para finalizar os containers:
+Para finalizar:
 
+```bash
 docker compose down
-Variáveis de ambiente
+```
 
-O projeto utiliza um arquivo .env para configurar o JWT.
+## Variáveis de ambiente
 
-Exemplo:
+O projeto utiliza um arquivo `.env` para configurar o JWT:
 
+```text
 JWT_SECRET=chave-local-apenas-para-o-laboratorio
 JWT_EXPIRES_IN_SECONDS=900
+```
 
-O arquivo .env está incluído no .gitignore e não deve ser versionado.
+O `.env` não é versionado no Git. O arquivo `.env.example` serve como modelo.
 
-O arquivo .env.example é disponibilizado como modelo de configuração.
+## Resultado
 
-Considerações finais
+A atividade implementa autenticação e autorização em uma API NestJS, com:
 
-A atividade permitiu aplicar, de forma prática, os conceitos de autenticação, autorização, JWT, bcrypt e controle de acesso por papéis em uma API desenvolvida com NestJS.
-
-A implementação foi realizada de forma incremental, utilizando Docker para execução da aplicação e Git para registrar a evolução do projeto.
+* autenticação local;
+* hash de senhas com bcrypt;
+* geração e validação de JWT;
+* autenticação de rotas;
+* autorização por papéis;
+* controle de acesso com Guards;
+* execução com Docker;
+* versionamento com Git.
