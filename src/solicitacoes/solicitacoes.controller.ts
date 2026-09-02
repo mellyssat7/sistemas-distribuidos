@@ -1,4 +1,13 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { SolicitacoesService } from './solicitacoes.service';
 
 @Controller('solicitacoes')
@@ -7,6 +16,8 @@ export class SolicitacoesController {
     private readonly solicitacoesService: SolicitacoesService,
   ) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('gestor', 'auditor')
   @Get(':id')
   buscarPorId(@Param('id', ParseIntPipe) id: number) {
     return this.solicitacoesService.buscarPorId(id);

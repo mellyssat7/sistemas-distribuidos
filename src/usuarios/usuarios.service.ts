@@ -34,6 +34,15 @@ export class UsuariosService {
       papel: 'solicitante',
       ativo: true,
     },
+    {
+      id: 3,
+      nome: 'Carla Costa',
+      email: 'carla@empresa.com',
+      senhaHash:
+        '$2b$12$5S9LDbR3FznMAsZY5P..2OKE932dOHeVvGrmlfklgquClbkKgUidC',
+      papel: 'auditor',
+      ativo: true,
+    },
   ];
 
   buscarPorEmail(email: string) {
